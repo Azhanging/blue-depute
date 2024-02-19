@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Title</title>
+  </head>
+  <body>
+    <script src="./dist/blue-depute.js"></script>
+    <script>
+      //实例化委托
+      var depute = new BlueDepute({
+        hooks: {
+          on() {
+            console.log(`注册了`, arguments);
+          },
+          off() {
+            console.log(`注销了`, arguments);
+          },
+          emit() {
+            console.log(`触发了`, arguments);
+          },
+        },
+      });
+
+      //注册委托事件 =》事件ID
+      var someEventId = depute.on(`someEvent`, (event) => {
+        console.log(`事件数据`, event.data);
+      });
+
+      var someEventId1 = depute.once(`someEvent`, (event) => {
+        console.log(`事件数据`, event.data);
+      });
+
+      //触发委托
+      depute.emit(`someEvent`, {
+        data: `first emit`,
+      });
+
+      setTimeout(() => {
+        //触发委托
+        depute.emit(`someEvent`, {
+          data: `second emit`,
+        });
+      });
+    </script>
+  </body>
+</html>

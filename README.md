@@ -1,2 +1,2 @@
 # blue-depute
-depute event manage
+blue-depute
