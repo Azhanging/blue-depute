@@ -1,6 +1,6 @@
 {
   "name": "blue-depute",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "blue-depute",
   "main": "./dist/blue-depute.js",
   "types": "./types/index.d.ts",

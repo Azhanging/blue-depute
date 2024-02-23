@@ -160,7 +160,7 @@ class BlueDepute {
     if (!current) return false;
     const { queue } = current;
     //不存在，全部处理删除
-    if (handler === undefined) {
+    if (handler === undefined && eventId === undefined) {
       //删除所有的
       while (queue.length) {
         const current = queue.pop();
@@ -179,8 +179,7 @@ class BlueDepute {
     while (
       (index = queue.findIndex(
         (item) =>
-          (eventId === undefined || eventId === item.eventId) &&
-          item.handler === handler
+          (eventId === undefined && item.handler === handler) || (eventId === item.eventId)
       )) !== -1
     ) {
       let current: TEventItem = null;

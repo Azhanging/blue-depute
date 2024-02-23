@@ -4,7 +4,7 @@
  * (c) 2016-2024 Blue
  * Released under the MIT License.
  * https://github.com/azhanging/blue-depute
- * time:Wed, 31 Jan 2024 02:01:36 GMT
+ * time:Fri, 23 Feb 2024 10:09:22 GMT
  * 
  */
 (function webpackUniversalModuleDefinition(root, factory) {
@@ -199,7 +199,7 @@ var BlueDepute = /** @class */ (function () {
             return false;
         var queue = current.queue;
         //不存在，全部处理删除
-        if (handler === undefined) {
+        if (handler === undefined && eventId === undefined) {
             //删除所有的
             while (queue.length) {
                 var current_1 = queue.pop();
@@ -216,8 +216,7 @@ var BlueDepute = /** @class */ (function () {
         }
         var index = -1;
         while ((index = queue.findIndex(function (item) {
-            return (eventId === undefined || eventId === item.eventId) &&
-                item.handler === handler;
+            return (eventId === undefined && item.handler === handler) || (eventId === item.eventId);
         })) !== -1) {
             var current_2 = null;
             //全量删除

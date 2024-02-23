@@ -42,6 +42,23 @@
           data: `second emit`,
         });
       });
+
+      const sameHandler = () => {
+        console.log(`sameHandler`);
+      };
+
+      const same1 = depute.on(`same`, sameHandler);
+      const same2 = depute.on(`same`, () => {});
+      const same3 = depute.on(`same`, () => {});
+
+      //无id，删除所有
+      depute.off(`same`);
+      //无id，删除指定handler
+      depute.off(`same`, sameHandler);
+      //带id，不关心handler的匹配问题
+      depute.off(`same$${same2}`);
+
+      console.log(depute);
     </script>
   </body>
 </html>
