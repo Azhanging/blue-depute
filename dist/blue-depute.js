@@ -1,10 +1,10 @@
 /*!
  * 
- * blue-depute.js 1.0.0
+ * blue-depute.js 1.0.1
  * (c) 2016-2024 Blue
  * Released under the MIT License.
  * https://github.com/azhanging/blue-depute
- * time:Fri, 23 Feb 2024 10:09:22 GMT
+ * time:Sun, 25 Feb 2024 16:48:10 GMT
  * 
  */
 (function webpackUniversalModuleDefinition(root, factory) {
