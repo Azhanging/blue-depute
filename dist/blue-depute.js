@@ -1,10 +1,10 @@
 /*!
  * 
- * blue-depute.js 1.0.1
- * (c) 2016-2024 Blue
+ * blue-depute.js 1.0.2
+ * (c) 2016-2025 Blue
  * Released under the MIT License.
  * https://github.com/azhanging/blue-depute
- * time:Sun, 25 Feb 2024 16:48:10 GMT
+ * time:Tue, 19 Aug 2025 06:18:48 GMT
  * 
  */
 (function webpackUniversalModuleDefinition(root, factory) {
@@ -109,6 +109,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "EVENT_HOOK_TYPES", function() { return EVENT_HOOK_TYPES; });
 /**
  * 委托事件详情数据
  */
@@ -120,6 +121,15 @@ var DeputeEvent = /** @class */ (function () {
     }
     return DeputeEvent;
 }());
+/**
+ * 钩子类型
+ */
+var EVENT_HOOK_TYPES;
+(function (EVENT_HOOK_TYPES) {
+    EVENT_HOOK_TYPES["ON"] = "on";
+    EVENT_HOOK_TYPES["OFF"] = "off";
+    EVENT_HOOK_TYPES["EMIT"] = "emit";
+})(EVENT_HOOK_TYPES || (EVENT_HOOK_TYPES = {}));
 //空函数
 function noop() { }
 /**
@@ -172,7 +182,7 @@ var BlueDepute = /** @class */ (function () {
         });
         //执行的相关on钩子
         this.eventHook({
-            name: "on",
+            name: EVENT_HOOK_TYPES.ON,
             //事件类型
             type: type,
             //记录事件eventId
@@ -205,7 +215,7 @@ var BlueDepute = /** @class */ (function () {
                 var current_1 = queue.pop();
                 //执行的相关off钩子
                 this.eventHook({
-                    name: "off",
+                    name: EVENT_HOOK_TYPES.OFF,
                     //事件类型
                     type: type,
                     //事件ID
@@ -216,7 +226,8 @@ var BlueDepute = /** @class */ (function () {
         }
         var index = -1;
         while ((index = queue.findIndex(function (item) {
-            return (eventId === undefined && item.handler === handler) || (eventId === item.eventId);
+            return (eventId === undefined && item.handler === handler) ||
+                eventId === item.eventId;
         })) !== -1) {
             var current_2 = null;
             //全量删除
@@ -229,7 +240,7 @@ var BlueDepute = /** @class */ (function () {
             }
             //执行的相关off钩子
             this.eventHook({
-                name: "off",
+                name: EVENT_HOOK_TYPES.OFF,
                 //事件类型
                 type: type,
                 //事件ID
@@ -263,7 +274,7 @@ var BlueDepute = /** @class */ (function () {
             ]);
             //执行的相关off钩子
             _this.eventHook({
-                name: "emit",
+                name: EVENT_HOOK_TYPES.EMIT,
                 //事件类型
                 type: type,
                 eventId: item.eventId,
@@ -311,7 +322,8 @@ var BlueDepute = /** @class */ (function () {
      * 获取与解析类型，对于类型可能存在指定eventId的处理
      * */
     BlueDepute.prototype.getType = function (_type) {
-        var _a = _type.split(this.opts.eventIdSymbol), type = _a[0], _eventId = _a[1];
+        var eventIdSymbol = this.opts.eventIdSymbol;
+        var _a = _type.split(eventIdSymbol), type = _a[0], _eventId = _a[1];
         var eventId = parseInt(_eventId);
         if (!eventId) {
             eventId = undefined;

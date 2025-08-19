@@ -1,7 +1,7 @@
 /**
  * 事件id类型
  */
-type TEventId = number;
+type EventId = number;
 
 /**
  * 委托事件详情数据
@@ -9,8 +9,8 @@ type TEventId = number;
 class DeputeEvent {
   data: any;
   type: string;
-  eventId: TEventId;
-  constructor(opts: { data: any; type: string; eventId: TEventId }) {
+  eventId: EventId;
+  constructor(opts: { data: any; type: string; eventId: EventId }) {
     this.data = opts.data;
     this.type = opts.type;
     this.eventId = opts.eventId;
@@ -18,47 +18,68 @@ class DeputeEvent {
 }
 
 /**
+ * 钩子类型
+ */
+export enum EVENT_HOOK_TYPES {
+  ON = "on",
+  OFF = "off",
+  EMIT = "emit",
+}
+
+/**
  * Depute实例hooks处理
  */
-interface TDeputeEventHooks {
-  on?: Function;
-  off?: Function;
-  emit?: Function;
+type DeputeEventHooks = Partial<
+  Record<EVENT_HOOK_TYPES, (event?: EventHookOpts) => void>
+>;
+
+/**
+ *  钩子事件配置
+ */
+interface EventHookOpts {
+  name: EVENT_HOOK_TYPES;
+  type: string;
+  eventId?: EventId;
 }
 
 /**
  * 注册配置类型
  */
-interface TEventOnEventOpts {
+interface EventOnEventOpts {
   //是否一次消费
   once?: boolean;
 }
 
 /**
+ * 事件处理方法相关
+ */
+type EventHandler = (event?: DeputeEvent) => any;
+
+/**
  * 事件项处理类型
  */
-interface TEventItem {
-  handler: Function;
-  eventId: TEventId;
-  opts?: TEventOnEventOpts;
+interface EventQueue {
+  handler: EventHandler;
+  eventId: EventId;
+  opts?: EventOnEventOpts;
 }
 
 /**
  * 事件相关项类型
  */
-interface TEvent {
-  queue: TEventItem[];
+interface EventTypeDefine {
+  queue: EventQueue[];
   type: string;
 }
 
 /**
  * 委托类参数类型
  */
-interface TDeputeOpts {
+interface DeputeOpts {
   events?: {
-    [eventType: string]: TEvent;
+    [eventType: string]: EventTypeDefine;
   };
-  hooks?: TDeputeEventHooks;
+  hooks?: DeputeEventHooks;
   //事件id标记，用于切割使用
   eventIdSymbol?: string;
 }
@@ -72,15 +93,15 @@ function noop() {}
  */
 class BlueDepute {
   //自增的事件id存储
-  static _eventId: TEventId = 0;
+  static _eventId: EventId = 0;
   //配置
-  opts: TDeputeOpts;
+  opts: DeputeOpts;
   //委托事件存储
-  events: TDeputeOpts["events"];
+  events: DeputeOpts["events"];
   //钩子处理
-  hooks: TDeputeEventHooks;
+  hooks: DeputeEventHooks;
   //构造器
-  constructor(opts: TDeputeOpts = {}) {
+  constructor(opts: DeputeOpts = {}) {
     //配置项
     this.opts = Object.assign(
       {
@@ -107,11 +128,11 @@ class BlueDepute {
    * */
   on(
     type: string,
-    handler: Function = noop,
-    opts: TEventOnEventOpts = {}
-  ): TEventId {
+    handler: EventHandler = noop,
+    opts: EventOnEventOpts = {}
+  ): EventId {
     const { events } = this;
-    let current: TEvent = events[type];
+    let current: EventTypeDefine = events[type];
     if (!current) {
       //创建事件容器
       current = events[type] = {
@@ -132,7 +153,7 @@ class BlueDepute {
     });
     //执行的相关on钩子
     this.eventHook({
-      name: `on`,
+      name: EVENT_HOOK_TYPES.ON,
       //事件类型
       type,
       //记录事件eventId
@@ -145,7 +166,7 @@ class BlueDepute {
    * 一次注册委托：适用该方法注册委托，只会进行一次性的消费后会自动注销委托，
    * 相关的注销hooks也会进行相关的执行处理
    */
-  once(type: string, handler: Function) {
+  once(type: string, handler: EventHandler) {
     return this.on(type, handler, {
       once: true,
     });
@@ -154,9 +175,9 @@ class BlueDepute {
   /**
    * 注销委托,可针对指定的eventId进行注销处理，不存在eventId时，会对当前命中的type事件全部注销
    * */
-  off(_type: string, handler?: Function): boolean {
+  off(_type: string, handler?: EventHandler): boolean {
     const [type, eventId] = this.getType(_type);
-    const current: TEvent = this.findEvent(type);
+    const current: EventTypeDefine = this.findEvent(type);
     if (!current) return false;
     const { queue } = current;
     //不存在，全部处理删除
@@ -166,7 +187,7 @@ class BlueDepute {
         const current = queue.pop();
         //执行的相关off钩子
         this.eventHook({
-          name: `off`,
+          name: EVENT_HOOK_TYPES.OFF,
           //事件类型
           type,
           //事件ID
@@ -179,10 +200,11 @@ class BlueDepute {
     while (
       (index = queue.findIndex(
         (item) =>
-          (eventId === undefined && item.handler === handler) || (eventId === item.eventId)
+          (eventId === undefined && item.handler === handler) ||
+          eventId === item.eventId
       )) !== -1
     ) {
-      let current: TEventItem = null;
+      let current: EventQueue = null;
       //全量删除
       if (eventId === undefined) {
         current = queue.splice(index, 1)[0];
@@ -192,7 +214,7 @@ class BlueDepute {
       }
       //执行的相关off钩子
       this.eventHook({
-        name: `off`,
+        name: EVENT_HOOK_TYPES.OFF,
         //事件类型
         type,
         //事件ID
@@ -225,7 +247,7 @@ class BlueDepute {
       ]);
       //执行的相关off钩子
       this.eventHook({
-        name: `emit`,
+        name: EVENT_HOOK_TYPES.EMIT,
         //事件类型
         type,
         eventId: item.eventId,
@@ -244,7 +266,7 @@ class BlueDepute {
   /**
    * 执行相关hooks回调
    * */
-  eventHook(opts: { name: string; type: string; eventId?: TEventId }) {
+  eventHook(opts: EventHookOpts) {
     const { hooks } = this;
     const currentHook = hooks[opts.name];
     if (!currentHook) return;
@@ -264,23 +286,24 @@ class BlueDepute {
   /**
    * 生成事件eventId
    * */
-  genEventId(): TEventId {
+  genEventId(): EventId {
     return ++BlueDepute._eventId;
   }
 
   /**
    * 查找委托类型对象
    * */
-  findEvent(type: string): TEvent {
+  findEvent(type: string): EventTypeDefine {
     return this.events[type] || null;
   }
 
   /**
    * 获取与解析类型，对于类型可能存在指定eventId的处理
    * */
-  getType(_type: string): [string, TEventId] {
-    const [type, _eventId] = _type.split(this.opts.eventIdSymbol);
-    let eventId: TEventId = parseInt(_eventId);
+  getType(_type: string): [string, EventId] {
+    const { eventIdSymbol } = this.opts;
+    const [type, _eventId] = _type.split(eventIdSymbol);
+    let eventId: EventId = parseInt(_eventId);
     if (!eventId) {
       eventId = undefined;
     }
